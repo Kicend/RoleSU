@@ -26,7 +26,7 @@ async def on_connect():
 @bot.event
 async def on_ready():
     print("Zalogowany jako {0} ({0.id})".format(bot.user))
-    print("----------------------------------------------")
+    print("-------------------------------------------------")
     await startup(bot)
     current_status = "Monitoruję serwer"
     game = discord.Game(current_status)
