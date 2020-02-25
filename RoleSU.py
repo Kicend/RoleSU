@@ -35,7 +35,7 @@ async def on_ready():
 @bot.event
 async def on_reaction_add(reaction, user):
     member: discord.Member = cache["waiting_messages"][reaction.message.id][0]
-    reports_channel = bot.get_channel(627221454110326785)
+    reports_channel = bot.get_channel(681813852312436756)
     channel = await member.create_dm()
     if reaction.emoji == "🇹" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1:
         role = discord.utils.get(cache["waiting_messages"][reaction.message.id][4],

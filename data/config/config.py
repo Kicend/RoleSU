@@ -7,7 +7,7 @@ with open("data/config/SECRET.json", "r") as f:
 # Podstawowe parametry bota
 TOKEN = secrets["DISCORD_TOKEN"]
 commands_prefix = "!"
-version = "0.2"
+version = "0.2-1"
 boot_date = time.strftime("%H:%M %d.%m.%Y UTC")
 __cogs__ = [
     "data.modules.cogs.Administration",

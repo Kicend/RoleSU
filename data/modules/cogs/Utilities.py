@@ -15,7 +15,7 @@ class Utilities(commands.Cog):
         else:
             emoji_t = "🇹"
             emoji_n = "🇳"
-            channel = self.bot.get_channel(627221454110326785)
+            channel = self.bot.get_channel(681813852312436756)
             embed = discord.Embed(
                 colour=discord.Colour.red()
             )
