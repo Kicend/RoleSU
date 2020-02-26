@@ -3,15 +3,25 @@ import os
 
 # Stałe dla RoleSU
 SERVERS_PREFIXES_DIR = "data/settings/servers_prefixes"
-SERVERS_SETTINGS_FILES = "data/settings/servers_prefixes"
+SERVERS_SETTINGS_FILES = "data/settings/servers_settings"
 DEFAULT_SERVER_PREFIX = "!"
+DEFAULT_SERVER_CONFIG = {"role_announcement_channel": "Nie ustawione",
+                         "role_confirm_channel": "Nie ustawione",
+                         "role_management_channel": "Nie ustawione"}
 
-cache = {"waiting_messages": {}, "server_parameters": {}}
+cache = {"waiting_messages": {}, "server_parameters": {}, "servers_settings": {}}
 guild_list = []
 
 async def startup(bot):
     for guild in bot.guilds:
         guild_list.append(str(guild.id))
+        try:
+            with open(SERVERS_SETTINGS_FILES + "/{}.json".format(str(guild.id)), "r") as f:
+                guild_settings = json.load(f)
+                cache["servers_settings"][guild.id] = guild_settings
+        except (FileNotFoundError, FileExistsError):
+            with open(SERVERS_SETTINGS_FILES + "/{}.json".format(str(guild.id)), "a") as f:
+                json.dump(DEFAULT_SERVER_CONFIG, f, indent=4)
     os.makedirs(SERVERS_PREFIXES_DIR, exist_ok=True)
     os.makedirs(SERVERS_SETTINGS_FILES, exist_ok=True)
     if not os.path.isfile(SERVERS_PREFIXES_DIR + "/prefixes.json"):
