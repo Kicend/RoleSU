@@ -35,21 +35,27 @@ async def on_ready():
 @bot.event
 async def on_reaction_add(reaction, user):
     member: discord.Member = cache["waiting_messages"][reaction.message.id][0]
-    reports_channel = bot.get_channel(681813852312436756)
-    channel = await member.create_dm()
-    if reaction.emoji == "🇹" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1:
+    role_confirm_channel = bot.get_channel(cache["servers_settings"][reaction.guild.id]["role_announcement_channel"])
+    role_announcement_channel = bot.get_channel(
+                                cache["server_settings"][reaction.guild.id]["role_announcement_channel"])
+    user_dm = await member.create_dm()
+    if reaction.emoji == "🇹" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1\
+            and reaction.channel.id == role_confirm_channel:
         role = discord.utils.get(cache["waiting_messages"][reaction.message.id][4],
                                  name=cache["waiting_messages"][reaction.message.id][2])
         await member.add_roles(role)
-        await channel.send("Rola '{}' została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
+        await user_dm.send("Rola '{}' została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
         del cache["waiting_messages"][reaction.message.id]
-        msg = await reports_channel.fetch_message(reaction.message.id)
+        msg = await role_confirm_channel.fetch_message(reaction.message.id)
         await msg.delete()
-    elif reaction.emoji == "🇳" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1:
-        msg = await reports_channel.fetch_message(reaction.message.id)
+    elif reaction.emoji == "🇳" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1\
+            and reaction.channel.id == role_confirm_channel:
+        msg = await role_confirm_channel.fetch_message(reaction.message.id)
         await msg.delete()
-        await channel.send("Rola '{}' nie została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
+        await user_dm.send("Rola '{}' nie została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
         del cache["waiting_messages"][reaction.message.id]
+    elif reaction.emoji == "✅" and reaction.channel.id == role_announcement_channel:
+        pass
 
 @bot.event
 async def on_command_error(ctx, error):
