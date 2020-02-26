@@ -1,10 +1,35 @@
 import discord
 from discord.ext import commands
+from discord.ext.commands import has_permissions
 from data.modules.core.core import cache
 
 class Utilities(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    @has_permissions(administrator=True)
+    async def add_role(self, ctx, role: discord.Role, description: str = None):
+        """Stwórz wiadomość z możliwością wzięcia podanej roli"""
+        if ctx.channel.id == 682303163755266058:
+            emoji_check = "✅"
+            channel = self.bot.get_channel(cache["servers_settings"][ctx.guild.id]["role_announcement_channel"])
+            embed = discord.Embed(
+                colour=discord.Colour.green()
+            )
+
+            embed.set_author(name="Poproś o przyznanie roli {}".format(role.name))
+            if description is not None and len(description) <= 150:
+                embed.add_field(name="Opis sekcji/grupy:", value="{}".format(description), inline=False)
+            elif description is not None and len(description) > 150:
+                await ctx.send("Wiadomość przesłana bez opisu\n"
+                               "**Powód**\n"
+                               "Opis jest za długi! Dopuszczalna długość to 150 znaków")
+                embed.remove_field(0)
+            message = await channel.send(embed=embed)
+            await message.add_reaction(emoji_check)
+        else:
+            await ctx.send("Tej komendy mogą używać tylko administratorzy!")
 
     @commands.command()
     async def ask_role(self, ctx, role: discord.Role):
@@ -29,6 +54,8 @@ class Utilities(commands.Cog):
             await message.add_reaction(emoji_t)
             await message.add_reaction(emoji_n)
             print(cache["waiting_messages"])
+
+        # TODO: Usunięcie tej komendy i wykorzystanie jej mechanizmów do bot.event on_add_reaction
 
 def setup(bot):
     bot.add_cog(Utilities(bot))
