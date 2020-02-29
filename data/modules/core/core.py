@@ -13,6 +13,9 @@ cache = {"server_parameters": {}, "servers_settings": {}}
 guild_list = []
 
 async def startup(bot):
+    os.makedirs("data/settings", exist_ok=True)
+    os.makedirs(SERVERS_PREFIXES_DIR, exist_ok=True)
+    os.makedirs(SERVERS_SETTINGS_FILES, exist_ok=True)
     for guild in bot.guilds:
         guild_list.append(str(guild.id))
         try:
@@ -22,8 +25,6 @@ async def startup(bot):
         except (FileNotFoundError, FileExistsError):
             with open(SERVERS_SETTINGS_FILES + "/{}.json".format(str(guild.id)), "a") as f:
                 json.dump(DEFAULT_SERVER_CONFIG, f, indent=4)
-    os.makedirs(SERVERS_PREFIXES_DIR, exist_ok=True)
-    os.makedirs(SERVERS_SETTINGS_FILES, exist_ok=True)
     if not os.path.isfile(SERVERS_PREFIXES_DIR + "/prefixes.json"):
         with open(SERVERS_PREFIXES_DIR + "/prefixes.json", "a") as f:
             servers_prefixes = {}
