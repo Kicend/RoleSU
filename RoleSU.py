@@ -4,6 +4,7 @@ from discord.ext import commands
 from data.config import config
 from data.modules.core.core import startup
 from data.modules.core.core import cache
+from data.modules.cogs.Utilities import Utilities
 
 def get_prefix(bot, message):
     with open("data/settings/servers_prefixes/prefixes.json", "r") as f:
@@ -13,6 +14,27 @@ def get_prefix(bot, message):
 
 bot = commands.Bot(command_prefix=get_prefix, description="RoleSU wersja {}".format(config.version))
 bot.remove_command("help")
+
+async def get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, switch: int):
+    if switch == 0:
+        msg_confirm = await role_confirm_channel.fetch_message(reaction.message.id)
+        message_embeds = msg_confirm.embeds
+        msg_embed_dict = message_embeds[0].to_dict()
+        name = msg_embed_dict["fields"][1]["value"]
+        role_name = name[:-23]
+        role_id = name[name.index(":") + 2:]
+
+        return [role_name, role_id]
+
+    elif switch == 1:
+        msg_announcement = await role_announcement_channel.fetch_message(reaction.message.id)
+        message_embeds = msg_announcement.embeds
+        msg_embed_dict = message_embeds[0].to_dict()
+        name = msg_embed_dict["author"]["name"]
+        role_name = name[name.index("l") + 3:-23]
+        role_id = name[name.index(":") + 2:]
+
+        return [role_name, role_id]
 
 @bot.event
 async def on_connect():
@@ -33,29 +55,96 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online, activity=game)
 
 @bot.event
+async def on_raw_reaction_add(payload):
+    channel = bot.get_channel(payload.channel_id)
+    msg = await channel.fetch_message(payload.message_id)
+    if payload.emoji.name == "🇳":
+        msg_emoji_count = msg.reactions[1].count
+    else:
+        msg_emoji_count = msg.reactions[0].count
+    guild = bot.get_guild(payload.guild_id)
+
+    class Reaction:
+        def __init__(self, emoji):
+            self.emoji = emoji.name
+            self.message = msg
+            self.guild = guild
+            self.count = msg_emoji_count
+
+    reaction = Reaction(payload.emoji)
+    await on_reaction_add(reaction, payload.member)
+
+@bot.event
 async def on_reaction_add(reaction, user):
-    member: discord.Member = cache["waiting_messages"][reaction.message.id][0]
-    role_confirm_channel = bot.get_channel(cache["servers_settings"][reaction.guild.id]["role_announcement_channel"])
+    role_confirm_channel = bot.get_channel(
+                           cache["servers_settings"][reaction.message.guild.id]["role_confirm_channel"])
     role_announcement_channel = bot.get_channel(
-                                cache["server_settings"][reaction.guild.id]["role_announcement_channel"])
-    user_dm = await member.create_dm()
-    if reaction.emoji == "🇹" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1\
-            and reaction.channel.id == role_confirm_channel:
-        role = discord.utils.get(cache["waiting_messages"][reaction.message.id][4],
-                                 name=cache["waiting_messages"][reaction.message.id][2])
-        await member.add_roles(role)
-        await user_dm.send("Rola '{}' została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
-        del cache["waiting_messages"][reaction.message.id]
-        msg = await role_confirm_channel.fetch_message(reaction.message.id)
-        await msg.delete()
-    elif reaction.emoji == "🇳" and reaction.message.id in cache["waiting_messages"].keys() and reaction.count > 1\
-            and reaction.channel.id == role_confirm_channel:
-        msg = await role_confirm_channel.fetch_message(reaction.message.id)
-        await msg.delete()
-        await user_dm.send("Rola '{}' nie została przyznana!".format(cache["waiting_messages"][reaction.message.id][2]))
-        del cache["waiting_messages"][reaction.message.id]
-    elif reaction.emoji == "✅" and reaction.channel.id == role_announcement_channel:
-        pass
+                                cache["servers_settings"][reaction.message.guild.id]["role_announcement_channel"])
+    guild = reaction.message.guild
+    if reaction.emoji == "🇹" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
+        required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
+        user_dm = await user.create_dm()
+        role = discord.utils.get(reaction.message.guild.roles,
+                                 name=required_info[0])
+        try:
+            await user.add_roles(role)
+            await user_dm.send("Rola '{}' została przyznana!".format(required_info[0]))
+        except discord.Forbidden:
+            await user_dm.send(
+                  "Rola '{}' nie została przyznana!".format(required_info[0]))
+        try:
+            msg = await role_confirm_channel.fetch_message(reaction.message.id)
+            await msg.delete()
+        except discord.NotFound:
+            pass
+    elif reaction.emoji == "🇳" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
+        required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
+        user_dm = await user.create_dm()
+        try:
+            msg = await role_confirm_channel.fetch_message(reaction.message.id)
+            await msg.delete()
+        except discord.NotFound:
+            pass
+        await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
+    elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
+        required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 1)
+        utilities_object = Utilities(bot)
+        await utilities_object.ask_role(user, guild, required_info[0], required_info[1])
+
+@bot.event
+async def on_raw_reaction_remove(payload):
+    channel = bot.get_channel(payload.channel_id)
+    msg = await channel.fetch_message(payload.message_id)
+    msg_emoji_count = msg.reactions[0].count
+    guild = bot.get_guild(payload.guild_id)
+    for member in guild.members:
+        if member.id == payload.user_id:
+            user = member
+
+    class Reaction:
+        def __init__(self, emoji):
+            self.emoji = emoji.name
+            self.message = msg
+            self.guild = guild
+            self.count = msg_emoji_count
+
+    reaction = Reaction(payload.emoji)
+    await on_reaction_remove(reaction, user)
+
+@bot.event
+async def on_reaction_remove(reaction, user):
+    role_confirm_channel = bot.get_channel(
+                           cache["servers_settings"][reaction.message.guild.id]["role_confirm_channel"])
+    role_announcement_channel = bot.get_channel(
+                                cache["servers_settings"][reaction.message.guild.id]["role_announcement_channel"])
+    if reaction.emoji == "✅" and reaction.message.channel.id == role_announcement_channel.id:
+        required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 1)
+        role = discord.utils.get(reaction.message.guild.roles,
+                                 name=required_info[0])
+        try:
+            await user.remove_roles(role)
+        except AttributeError:
+            pass
 
 @bot.event
 async def on_command_error(ctx, error):
