@@ -117,6 +117,7 @@ async def on_raw_reaction_remove(payload):
     msg = await channel.fetch_message(payload.message_id)
     msg_emoji_count = msg.reactions[0].count
     guild = bot.get_guild(payload.guild_id)
+    user = None
     for member in guild.members:
         if member.id == payload.user_id:
             user = member
