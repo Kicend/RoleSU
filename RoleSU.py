@@ -89,38 +89,32 @@ async def on_reaction_add(reaction, user):
                                     cache["servers_settings"][reaction.message.guild.id]["role_announcement_channel"])
         guild = reaction.message.guild
         if reaction.emoji == "🇹" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
-            if reaction.message.id not in cache["messages"]:
-                cache["messages"][reaction.message.id] = 1
-                required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
-                user_dm = await user.create_dm()
-                role = discord.utils.get(reaction.message.guild.roles,
-                                         name=required_info[0])
-                try:
-                    await user.add_roles(role)
-                    await user_dm.send("Rola '{}' została przyznana!".format(required_info[0]))
-                except discord.Forbidden:
-                    await user_dm.send(
-                          "Rola '{}' nie została przyznana!".format(required_info[0]))
-                try:
-                    msg = await role_confirm_channel.fetch_message(reaction.message.id)
-                    await msg.delete()
-                except discord.NotFound:
-                    pass
-            else:
-                del cache["messages"][reaction.message.id]
+            cache["messages"][reaction.message.id] = 1
+            required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
+            user_dm = await user.create_dm()
+            role = discord.utils.get(reaction.message.guild.roles,
+                                     name=required_info[0])
+            try:
+                await user.add_roles(role)
+                await user_dm.send("Rola '{}' została przyznana!".format(required_info[0]))
+            except discord.Forbidden:
+                await user_dm.send(
+                      "Rola '{}' nie została przyznana!".format(required_info[0]))
+            try:
+                msg = await role_confirm_channel.fetch_message(reaction.message.id)
+                await msg.delete()
+            except discord.NotFound:
+                pass
         elif reaction.emoji == "🇳" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
-            if reaction.message.id not in cache["messages"]:
-                cache["messages"][reaction.message.id] = 1
-                required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
-                user_dm = await user.create_dm()
-                try:
-                    msg = await role_confirm_channel.fetch_message(reaction.message.id)
-                    await msg.delete()
-                except discord.NotFound:
-                    pass
-                await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
-            else:
-                del cache["messages"][reaction.message.id]
+            cache["messages"][reaction.message.id] = 1
+            required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
+            user_dm = await user.create_dm()
+            try:
+                msg = await role_confirm_channel.fetch_message(reaction.message.id)
+                await msg.delete()
+            except discord.NotFound:
+                pass
+            await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
         elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 1)
             utilities_object = Utilities(bot)
