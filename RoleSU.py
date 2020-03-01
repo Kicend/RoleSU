@@ -1,6 +1,8 @@
 import json
 import discord
 from discord.ext import commands
+from itertools import cycle
+from asyncio import sleep as aio_sleep
 from data.config import config
 from data.modules.core.core import startup
 from data.modules.core.core import cache
@@ -50,9 +52,12 @@ async def on_ready():
     print("Zalogowany jako {0} ({0.id})".format(bot.user))
     print("-------------------------------------------------")
     await startup(bot)
-    current_status = "Monitoruję serwer"
-    game = discord.Game(current_status)
-    await bot.change_presence(status=discord.Status.online, activity=game)
+    status = cycle(["Monitoruję serwer", "RoleSU {}".format(config.version)])
+    while not bot.is_closed():
+        current_status = next(status)
+        game = discord.Game(current_status)
+        await bot.change_presence(status=discord.Status.online, activity=game)
+        await aio_sleep(10)
 
 @bot.event
 async def on_raw_reaction_add(payload):
