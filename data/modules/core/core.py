@@ -9,7 +9,7 @@ DEFAULT_SERVER_CONFIG = {"role_announcement_channel": "Nie ustawione",
                          "role_confirm_channel": "Nie ustawione",
                          "role_management_channel": "Nie ustawione"}
 
-cache = {"server_parameters": {}, "servers_settings": {}}
+cache = {"messages": {}, "server_parameters": {}, "servers_settings": {}}
 guild_list = []
 
 async def startup(bot):
