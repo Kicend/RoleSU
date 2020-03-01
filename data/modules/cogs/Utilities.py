@@ -17,7 +17,7 @@ class Utilities(commands.Cog):
         )
 
         embed.set_author(name="Prośba o przyznanie roli")
-        embed.add_field(name="Użytkownik:", value="{} ID: {}".format(user, user.id), inline=False)
+        embed.add_field(name="Użytkownik:", value="{} ID: {}".format(user.display_name, user.id), inline=False)
         embed.add_field(name="Rola:", value="{} ID: {}".format(role_name, role_id), inline=False)
         message = await channel.send(embed=embed)
         await message.add_reaction(emoji_t)
