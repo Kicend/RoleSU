@@ -17,7 +17,7 @@ def get_prefix(bot, message):
 bot = commands.Bot(command_prefix=get_prefix, description="RoleSU wersja {}".format(config.version))
 bot.remove_command("help")
 
-async def get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, switch: int):
+async def get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel=None, switch: int = None):
     if switch == 0:
         msg_confirm = await role_confirm_channel.fetch_message(reaction.message.id)
         message_embeds = msg_confirm.embeds
@@ -116,9 +116,14 @@ async def on_reaction_add(reaction, user):
                 pass
             await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
         elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
-            required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 1)
+            required_info = await get_embed_from_msg(reaction, role_announcement_channel, switch=1)
             utilities_object = Utilities(bot)
-            await utilities_object.ask_role(user, guild, required_info[0], required_info[1])
+            check = await utilities_object.check_for_duplicates(user, reaction.guild, required_info[0])
+            if check:
+                user_dm = await user.create_dm()
+                await user_dm.send("Wysłałeś już jedną prośbę o tą samą rolę! Poczekaj na realizację!")
+            else:
+                await utilities_object.ask_role(user, guild, required_info[0], required_info[1])
     else:
         del cache["messages"][reaction.message.id]
 

@@ -23,6 +23,20 @@ class Utilities(commands.Cog):
         await message.add_reaction(emoji_t)
         await message.add_reaction(emoji_n)
 
+    async def check_for_duplicates(self, user: discord.User, guild: discord.Guild, role_name: str):
+        """Funkcja sprawdzająca czy użytkownik nie prosi o tą samą rolę"""
+        channel = self.bot.get_channel(cache["servers_settings"][guild.id]["role_confirm_channel"])
+        messages = await channel.history().flatten()
+        for message in messages:
+            message_embeds = message.embeds
+            message_embed_dict = message_embeds[0].to_dict()
+            username = message_embed_dict["fields"][0]["value"][:-23]
+            rolename = message_embed_dict["fields"][1]["value"][:-23]
+            if username == user.display_name and rolename == role_name:
+                return True
+
+        return False
+
     @commands.command()
     @has_permissions(administrator=True)
     async def add_role(self, ctx, role: discord.Role, description: str = None):
