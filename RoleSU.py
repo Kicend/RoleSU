@@ -99,7 +99,7 @@ async def on_reaction_add(reaction, user):
         if reaction.emoji == "🇹" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
             cache["messages"][reaction.message.id] = 1
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
-            user_dm = await cache["messages"]["user"].create_dm()
+            user_dm = await cache["messages"][reaction.message.id]["user"].create_dm()
             role = discord.utils.get(reaction.message.guild.roles,
                                      name=required_info[0])
             try:
@@ -128,8 +128,22 @@ async def on_reaction_add(reaction, user):
         elif reaction.emoji == "🇳" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
             cache["messages"][reaction.message.id] = 1
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
-            user_dm = await user.create_dm()
+            user_dm = await cache["messages"][reaction.message.id]["user"].create_dm()
+            role = discord.utils.get(reaction.message.guild.roles,
+                                     name=required_info[0])
             try:
+                channel = bot.get_channel(cache["servers_settings"][reaction.message.guild.id]
+                                          ["role_management_channel"])
+                embed = discord.Embed(
+                    colour=discord.Colour.blue()
+                )
+                embed.set_author(name="DZIENNIK ZDARZEŃ")
+                embed.add_field(name="Użytkownik:", value="{} ID: {}".format
+                (cache["messages"][reaction.message.id]["user"].display_name,
+                 cache["messages"][reaction.message.id]["user"].id), inline=False)
+                embed.add_field(name="Wnioskowana rola:", value="{} ID: {}".format(role.name, role.id), inline=False)
+                embed.add_field(name="Odrzucił:", value="{} ID: {}".format(user.display_name, user.id), inline=False)
+                await channel.send(embed=embed)
                 msg = await role_confirm_channel.fetch_message(reaction.message.id)
                 await msg.delete()
             except discord.NotFound:
