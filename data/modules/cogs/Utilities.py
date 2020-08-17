@@ -21,6 +21,7 @@ class Utilities(commands.Cog):
         message = await channel.send(embed=embed)
         await message.add_reaction(emoji_t)
         await message.add_reaction(emoji_n)
+        cache["messages"][str(message.id)] = user
 
     async def check_for_duplicates(self, user: discord.User, guild: discord.Guild, role_name: str):
         """Funkcja sprawdzająca czy użytkownik nie prosi o tą samą rolę"""
