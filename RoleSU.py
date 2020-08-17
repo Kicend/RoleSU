@@ -85,6 +85,7 @@ async def on_raw_reaction_add(payload):
             self.count = msg_emoji_count
 
     reaction = Reaction(payload.emoji)
+    cache["messages"][str(payload.message_id)] = payload.member
     await on_reaction_add(reaction, payload.member)
 
 @bot.event
