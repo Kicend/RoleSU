@@ -103,7 +103,7 @@ async def on_reaction_add(reaction, user):
             role = discord.utils.get(reaction.message.guild.roles,
                                      name=required_info[0])
             try:
-                await cache["messages"][reaction.message.id]["user"].add_roles(role)
+                await cache["messages"][str(reaction.message.id)]["user"].add_roles(role)
                 await user_dm.send("Rola '{}' została przyznana!".format(required_info[0]))
                 channel = bot.get_channel(cache["servers_settings"][reaction.message.guild.id]
                                          ["role_management_channel"])
@@ -112,8 +112,8 @@ async def on_reaction_add(reaction, user):
                 )
                 embed.set_author(name="DZIENNIK ZDARZEŃ")
                 embed.add_field(name="Użytkownik:", value="{} ID: {}".format
-                               (cache["messages"][reaction.message.id]["user"].display_name,
-                                cache["messages"][reaction.message.id]["user"].id), inline=False)
+                               (cache["messages"][str(reaction.message.id)]["user"].display_name,
+                                cache["messages"][str(reaction.message.id)]["user"].id), inline=False)
                 embed.add_field(name="Wnioskowana rola:", value="{} ID: {}".format(role.name, role.id), inline=False)
                 embed.add_field(name="Zatwierdził:", value="{} ID: {}".format(user.display_name, user.id), inline=False)
                 await channel.send(embed=embed)
@@ -128,7 +128,7 @@ async def on_reaction_add(reaction, user):
         elif reaction.emoji == "🇳" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
             cache["messages"][reaction.message.id] = 1
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
-            user_dm = await cache["messages"][reaction.message.id]["user"].create_dm()
+            user_dm = await cache["messages"][str(reaction.message.id)]["user"].create_dm()
             role = discord.utils.get(reaction.message.guild.roles,
                                      name=required_info[0])
             try:
@@ -139,8 +139,8 @@ async def on_reaction_add(reaction, user):
                 )
                 embed.set_author(name="DZIENNIK ZDARZEŃ")
                 embed.add_field(name="Użytkownik:", value="{} ID: {}".format
-                (cache["messages"][reaction.message.id]["user"].display_name,
-                 cache["messages"][reaction.message.id]["user"].id), inline=False)
+                (cache["messages"][str(reaction.message.id)]["user"].display_name,
+                 cache["messages"][str(reaction.message.id)]["user"].id), inline=False)
                 embed.add_field(name="Wnioskowana rola:", value="{} ID: {}".format(role.name, role.id), inline=False)
                 embed.add_field(name="Odrzucił:", value="{} ID: {}".format(user.display_name, user.id), inline=False)
                 await channel.send(embed=embed)
@@ -150,7 +150,7 @@ async def on_reaction_add(reaction, user):
                 pass
             await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
         elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
-            cache["messages"][reaction.message.id]["user"] = user
+            cache["messages"][str(reaction.message.id)]["user"] = user
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, switch=1)
             utilities_object = Utilities(bot)
             check = await utilities_object.check_for_duplicates(user, reaction.guild, required_info[0])
