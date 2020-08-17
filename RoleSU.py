@@ -60,6 +60,14 @@ async def on_ready():
         await aio_sleep(10)
 
 @bot.event
+async def on_member_join(member):
+    autorole = cache["servers_settings"][member.guild.id]["autorole"]
+    if autorole is not None:
+        autorole_id = autorole[-18:]
+        role = discord.utils.get(member.guild.roles, id=int(autorole_id))
+        await member.add_roles(role)
+
+@bot.event
 async def on_raw_reaction_add(payload):
     channel = bot.get_channel(payload.channel_id)
     msg = await channel.fetch_message(payload.message_id)
@@ -97,6 +105,17 @@ async def on_reaction_add(reaction, user):
             try:
                 await user.add_roles(role)
                 await user_dm.send("Rola '{}' została przyznana!".format(required_info[0]))
+                channel = bot.get_channel(cache["servers_settings"][reaction.message.guild.id]
+                                         ["role_management_channel"])
+                embed = discord.Embed(
+                    colour=discord.Colour.blue()
+                )
+                embed.set_author(name="DZIENNIK ZDARZEŃ")
+                embed.add_field(name="Użytkownik:", value="{} ID: {}".format
+                               (cache["messages"]["user"].display_name, cache["messages"]["user"].id), inline=False)
+                embed.add_field(name="Wnioskowana rola:", value="{} ID: {}".format(role.name, role.id), inline=False)
+                embed.add_field(name="Zatwierdził:", value="{} ID: {}".format(user.display_name, user.id), inline=False)
+                await channel.send(embed=embed)
             except discord.Forbidden:
                 await user_dm.send(
                       "Rola '{}' nie została przyznana!".format(required_info[0]))
@@ -116,6 +135,7 @@ async def on_reaction_add(reaction, user):
                 pass
             await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
         elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
+            cache["messages"]["user"] = user
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, switch=1)
             utilities_object = Utilities(bot)
             check = await utilities_object.check_for_duplicates(user, reaction.guild, required_info[0])

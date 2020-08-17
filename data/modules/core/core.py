@@ -7,7 +7,8 @@ SERVERS_SETTINGS_FILES = "data/settings/servers_settings"
 DEFAULT_SERVER_PREFIX = "!"
 DEFAULT_SERVER_CONFIG = {"role_announcement_channel": "Nie ustawione",
                          "role_confirm_channel": "Nie ustawione",
-                         "role_management_channel": "Nie ustawione"}
+                         "role_management_channel": "Nie ustawione",
+                         "autorole": None}
 
 cache = {"messages": {}, "server_parameters": {}, "servers_settings": {}}
 guild_list = []
