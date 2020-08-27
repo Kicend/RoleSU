@@ -85,20 +85,23 @@ async def on_raw_reaction_add(payload):
             self.count = msg_emoji_count
 
     reaction = Reaction(payload.emoji)
-    cache["messages"][str(payload.message_id)] = payload.member
+    if payload.message_id not in cache["messages"]:
+        try:
+            cache["messages"][str(payload.message_id)] = await guild.fetch_member(
+                                                         int(msg.embeds[0].fields[0].value[-18:]))
+        except IndexError:
+            pass
     await on_reaction_add(reaction, payload.member)
 
 @bot.event
 async def on_reaction_add(reaction, user):
     if reaction.message.id not in cache["messages"]:
-        cache["messages"][reaction.message.id] = 1
         role_confirm_channel = bot.get_channel(
                                cache["servers_settings"][reaction.message.guild.id]["role_confirm_channel"])
         role_announcement_channel = bot.get_channel(
                                     cache["servers_settings"][reaction.message.guild.id]["role_announcement_channel"])
         guild = reaction.message.guild
         if reaction.emoji == "🇹" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
-            cache["messages"][reaction.message.id] = 1
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
             user_dm = await cache["messages"][str(reaction.message.id)].create_dm()
             role = discord.utils.get(reaction.message.guild.roles,
@@ -127,7 +130,6 @@ async def on_reaction_add(reaction, user):
             except discord.NotFound:
                 pass
         elif reaction.emoji == "🇳" and reaction.count > 1 and reaction.message.channel.id == role_confirm_channel.id:
-            cache["messages"][reaction.message.id] = 1
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, role_confirm_channel, 0)
             user_dm = await cache["messages"][str(reaction.message.id)].create_dm()
             role = discord.utils.get(reaction.message.guild.roles,
@@ -151,7 +153,6 @@ async def on_reaction_add(reaction, user):
                 pass
             await user_dm.send("Rola '{}' nie została przyznana!".format(required_info[0]))
         elif reaction.emoji == "✅" and reaction.count > 1 and reaction.message.channel.id == role_announcement_channel.id:
-            cache["messages"][str(reaction.message.id)] = user
             required_info = await get_embed_from_msg(reaction, role_announcement_channel, switch=1)
             utilities_object = Utilities(bot)
             check = await utilities_object.check_for_duplicates(user, reaction.guild, required_info[0])
