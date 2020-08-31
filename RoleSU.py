@@ -85,7 +85,7 @@ async def on_raw_reaction_add(payload):
             self.count = msg_emoji_count
 
     reaction = Reaction(payload.emoji)
-    if payload.message_id not in cache["messages"]:
+    if payload.message_id not in cache["messages"] and payload.emoji.name != "✅":
         try:
             cache["messages"][str(payload.message_id)] = await guild.fetch_member(
                                                          int(msg.embeds[0].fields[0].value[-18:]))
